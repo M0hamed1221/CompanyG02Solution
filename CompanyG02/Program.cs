@@ -191,65 +191,134 @@ namespace CompanyG02
 
                 #region join and groupjoin
 
-                var res = from d in companyDBContext.Departments
-                          join e in companyDBContext.Employees
-                          on d.DepartmentId equals e.DepartmentId
-                          select new
-                          {
-                              EmployeeId=e.Id,
-                              EmployeeName = e.Name,
-                              DepartmentId = d.DepartmentId,
-                              DepartmentName = d.Name,
-                          };
-                res = companyDBContext.Departments.Join(companyDBContext.Employees, d => d.DepartmentId, e => e.DepartmentId,
-                    (d, e) => new
-                    {
-                        EmployeeId = e.Id,
-                        EmployeeName = e.Name,
-                        DepartmentId = d.DepartmentId,
-                        DepartmentName = d.Name,
-                    });
+                //  var res = from d in companyDBContext.Departments
+                //            join e in companyDBContext.Employees
+                //            on d.DepartmentId equals e.DepartmentId
+                //            select new
+                //            {
+                //                EmployeeId=e.Id,
+                //                EmployeeName = e.Name,
+                //                DepartmentId = d.DepartmentId,
+                //                DepartmentName = d.Name,
+                //            };
+                //  res = companyDBContext.Departments.Join(companyDBContext.Employees, d => d.DepartmentId, e => e.DepartmentId,
+                //      (d, e) => new
+                //      {
+                //          EmployeeId = e.Id,
+                //          EmployeeName = e.Name,
+                //          DepartmentId = d.DepartmentId,
+                //          DepartmentName = d.Name,
+                //      });
 
 
-                 res = from d in companyDBContext.Departments
-                          join e in companyDBContext.Employees
-                          on d.DepartmentId equals e.DepartmentId
-                          select new
-                          {
-                              EmployeeId = e.Id,
-                              EmployeeName = e.Name,
-                              DepartmentId = d.DepartmentId,
-                              DepartmentName = d.Name,
-                          };
-                var DepGroupres = companyDBContext.Departments.GroupJoin(companyDBContext.Employees, 
+                //   res = from d in companyDBContext.Departments
+                //            join e in companyDBContext.Employees
+                //            on d.DepartmentId equals e.DepartmentId
+                //            select new
+                //            {
+                //                EmployeeId = e.Id,
+                //                EmployeeName = e.Name,
+                //                DepartmentId = d.DepartmentId,
+                //                DepartmentName = d.Name,
+                //            };
+                //  var DepGroupres = companyDBContext.Departments.GroupJoin(companyDBContext.Employees, 
+                //      d => d.DepartmentId,
+                //      e => e.DepartmentId,
+                //      (department,employee)
+                //      => new
+                //      {
+                //          department,
+                //          employee
+                //      });
+
+                //var  DepGrouphoinres = from d in companyDBContext.Departments
+                //                join e in companyDBContext.Employees
+                //                on d.DepartmentId equals e.DepartmentId into Employees
+                //                select new
+                //                {
+                //                    Department = d,
+                //                    Employees = Employees
+                //                };  
+
+                //  foreach (var item in DepGroupres)
+                //  {
+                //      Console.WriteLine($"Department =>{item.department.DepartmentId}, {item.department.Name}");
+                //      foreach (var emp in item.employee)
+                //      {
+                //          Console.WriteLine($"--------------------- emp {emp.Name}");
+                //      }
+                //  }
+
+
+                #endregion
+                #region left outer join
+
+               var res = companyDBContext.Departments.GroupJoin(companyDBContext.Employees,
                     d => d.DepartmentId,
                     e => e.DepartmentId,
-                    (department,employee)
-                    => new
+                    (dpartment, employee) => new
                     {
-                        department,
-                        employee
+                        dpartment,
+                        employee = employee.DefaultIfEmpty()
+                    }).SelectMany(gcoll=>gcoll.employee,(gcoll,emp)=>new
+                    {
+                        emp,
+                        gcoll.dpartment
                     });
 
-              var  DepGrouphoinres = from d in companyDBContext.Departments
-                              join e in companyDBContext.Employees
-                              on d.DepartmentId equals e.DepartmentId into Employees
-                              select new
-                              {
-                                  Department = d,
-                                  Employees = Employees
-                              };  
 
-                foreach (var item in DepGroupres)
+           var     reslt = from D in companyDBContext.Departments
+                      join e in companyDBContext.Employees
+                      on D.DepartmentId equals e.DepartmentId
+                      into Employees
+                      from emp in Employees.DefaultIfEmpty()
+                       select
+                      new
+                      {
+                          emp ,
+                         D
+
+                      };
+
+
+               
+
+                foreach (var item in reslt)
                 {
-                    Console.WriteLine($"Department =>{item.department.DepartmentId}, {item.department.Name}");
-                    foreach (var emp in item.employee)
-                    {
-                        Console.WriteLine($"--------------------- emp {emp.Name}");
-                    }
+                    Console.WriteLine($"Employee =>{item.emp?.Name??"No Name"}, Department => {item.D.Name}");
+                   
                 }
 
 
+                #endregion
+
+                #region Cross join 
+
+                var crossjoin = from d in companyDBContext.Departments
+                                from e in companyDBContext.Employees
+                                                          select
+                                new
+                                {
+                                    e,
+                                    d
+                                };
+
+                crossjoin = companyDBContext.Departments.SelectMany(d => companyDBContext.Employees.Select(e=>new {e, d}));
+
+                foreach (var item in crossjoin)
+                {
+                    Console.WriteLine($"Employee =>{item.e?.Name ?? "No Name"}, Department => {item.d.Name}");
+
+                }
+                #endregion
+                #region Mapping View
+
+                var view = companyDBContext.EmployeesDepartments;
+                foreach (var item in view)
+                {
+                    Console.WriteLine($"{item.DepartmentName} ,{item.DepartmentID},{item.EmployeeName},{item.EmployeeId}");
+                    
+                }
                 #endregion
             }
         }

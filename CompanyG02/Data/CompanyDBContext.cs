@@ -43,13 +43,16 @@ namespace CompanyG02.Data
                 .HasForeignKey<Department>(d => d.ManagerId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
-
+            modelBuilder.Entity<EmployeesDepartments>().ToView("epmloyeedepartmentview").HasNoKey();
 
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }
 
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Department> Departments { get; set; }
+        public DbSet<EmployeesDepartments> EmployeesDepartments { get; set; }
+
+
         //public DbSet<Product> Products { get; set; }
         //public DbSet<Project> Projects { get; set; }
 
